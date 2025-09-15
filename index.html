@@ -263,6 +263,52 @@
                 resultMessage.textContent = "조금 아쉽네요! 다시 도전해서 모든 배지를 모아보세요!";
                 resultMessage.className = "font-bold text-xl my-4 text-orange-500";
             }
+            
+            // 결과 저장 함수 호출
+            saveResultToSheet();
+        }
+
+        async function saveResultToSheet() {
+            // !!! 중요 !!! 아래 URL을 3단계에서 복사한 웹 앱 URL로 바꾸세요.
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyCcHOUBo3Un9tzBlL5gf0Qygwpau33B31grRPLZ8SaygnjcXMdIgHXKGgj0PiqQ8Rb/exec';
+            
+            // URL이 placeholder 상태이면 함수를 실행하지 않음
+            if (SCRIPT_URL.includes('여기에')) {
+                console.log('Google Apps Script URL이 설정되지 않았습니다.');
+                return;
+            }
+
+            const totalScore = Object.values(achievements).reduce((sum, ach) => sum + ach.correct, 0);
+            const totalProblems = allQuestions.length;
+
+            // 시트로 보낼 데이터 준비
+            const dataToSend = {
+                timestamp: new Date().toLocaleString(),
+                totalScore: `${totalScore}/${totalProblems}`,
+                score_basic: `${achievements['basic-inquiry'].correct}/${achievements['basic-inquiry'].total}`,
+                badge_basic: achievements['basic-inquiry'].badge ? 'O' : 'X',
+                score_inference: `${achievements['inference'].correct}/${achievements['inference'].total}`,
+                badge_inference: achievements['inference'].badge ? 'O' : 'X',
+                score_experiment: `${achievements['experiment'].correct}/${achievements['experiment'].total}`,
+                badge_experiment: achievements['experiment'].badge ? 'O' : 'X',
+                score_conclusion: `${achievements['conclusion'].correct}/${achievements['conclusion'].total}`,
+                badge_conclusion: achievements['conclusion'].badge ? 'O' : 'X',
+            };
+
+            try {
+                // fetch API를 사용하여 POST 요청으로 데이터 전송
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // no-cors 모드로 설정
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataToSend)
+                });
+                console.log("결과가 Google Sheet에 성공적으로 저장되었습니다.");
+            } catch (error) {
+                console.error("결과 저장 중 에러 발생:", error);
+            }
         }
 
         const tips = {
@@ -306,3 +352,4 @@
     </script>
 </body>
 </html>
+
